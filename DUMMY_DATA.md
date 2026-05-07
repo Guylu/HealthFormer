@@ -7,10 +7,6 @@ without access to any real cohort data.
 
 ## Provenance
 
-The fixture is produced by `scripts/make_dummy_data.py` in the
-sister repository
-[HPPTokenization](https://github.com/Guylu/HPPTokenization), which
-generates it from a seeded `numpy.random.default_rng(0)`.
 
 It contains:
 
