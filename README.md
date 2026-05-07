@@ -6,8 +6,7 @@ continuous glucose monitoring, body composition, sleep, diet, wearables,
 microbiome, questionnaires, and other modalities as a single sequence of
 typed tokens.
 
-The model takes the tokenized output of the HPP tokenization pipeline
-(see [HPPTokenization](https://github.com/Guylu/HPPTokenization)) as
+The model takes the tokenized HPP dataset as
 input. Each token carries three channels: a token id from a unified
 vocabulary, a modality id identifying the source signal, and a vector of
 seven temporal features (`day_of_week`, `hour`, `minute`, `month`, `year`,
