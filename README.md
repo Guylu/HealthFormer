@@ -10,11 +10,24 @@ The model takes the tokenized HPP dataset as
 input. Each token carries three channels: a token id from a unified
 vocabulary, a modality id identifying the source signal, and a vector of
 seven temporal features (`day_of_week`, `hour`, `minute`, `month`, `year`,
-`day_of_month`, `sleep`). The decoder-only transformer learns
-intervention-conditioned simulation of future health states from past
-ones, with per-modality masked prediction heads at training time.
+`day_of_month`, `sleep`). The decoder-only transformer is trained with
+next-token cross-entropy over the unified vocabulary, and supports
+intervention-conditioned simulation of future health trajectories.
 
 Reference: arXiv [2604.27899](https://arxiv.org/abs/2604.27899).
+
+## Installation
+
+```bash
+git clone https://github.com/Guylu/HealthFormer.git
+cd HealthFormer
+pip install -r requirements.txt
+```
+
+Typical install time: about 10 minutes on a fresh environment, dominated
+by the `torch` wheel download. CPU is enough to load the dummy fixture
+and run `examples/load_dummy.py`; a CUDA-enabled GPU is recommended for
+any actual training work.
 
 ## Repository contents
 
