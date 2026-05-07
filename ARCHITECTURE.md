@@ -52,36 +52,22 @@ architecture is intentionally vanilla so contributions from the
 input representation and training objective remain isolated from
 backbone choices.
 
-Standard components:
-
-- Pre-norm residual blocks (RMSNorm or LayerNorm)
-- Multi-head self-attention with causal masking
-- SwiGLU or GELU feedforward
-- Rotary or learned positional encoding
-- Tied or untied input and output token embeddings
 
 ## Output heads
 
-Two heads share the backbone:
+A head shares the backbone:
 
-1. **Per-modality next-token prediction.** A linear projection from
+**Per-modality next-token prediction.** A linear projection from
    the backbone output to the unified vocabulary, trained with
    cross-entropy. Because each modality occupies a contiguous slice
    of the vocab, the model effectively learns per-modality
    distributions while sharing the trunk.
-2. **Time-delta regression.** A small MLP head that predicts the
-   gap (in some normalized time unit) to the next event. This
-   shapes the model's notion of "when" the next typed event arrives,
-   not just "what" it is.
 
 ## Training objective
 
 The total loss is a weighted sum:
 
 - Next-token cross-entropy, masked over real (non-padding) positions
-- Time-delta regression loss (Huber or MSE) on the gap targets
-- Optional: an intervention-prediction auxiliary loss for the
-  intervention-conditioned simulation experiments
 
 Per-modality loss weighting balances the contribution of dense
 modalities (CGM, wearables) against sparse ones (annual labs).
@@ -99,10 +85,6 @@ prefix. Counterfactual trajectories are obtained by running the same
 prefix with and without the injected token and comparing the
 generated continuations.
 
-This is **not a digital twin**. The model produces samples from a
-learned conditional distribution over future trajectories; it does
-not claim to simulate a specific individual's biology.
-
 ## Evaluation
 
 Three protocols, summarized here, detailed in the paper:
@@ -116,9 +98,3 @@ Three protocols, summarized here, detailed in the paper:
    generated counterfactual trajectories against documented
    intervention outcomes, where available.
 
-## What is *not* in this repository
-
-- The trained model weights.
-- The real tokenized dataset (only the synthetic dummy ships here).
-- The exact hyperparameters and training schedule (in the paper).
-- The four external cohort splits used for transfer evaluation.
