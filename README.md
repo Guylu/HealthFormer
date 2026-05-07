@@ -21,6 +21,10 @@ Reference: arXiv [2604.27899](https://arxiv.org/abs/2604.27899).
 - `train.py` entry point for training (work in progress)
 - `HPP_tokenized_dummy.pt` a fully synthetic 700 KB fixture matching the real pipeline schema, for development without cohort access
 - `DUMMY_DATA.md` provenance and schema documentation for the fixture
+- `ARCHITECTURE.md` prose description of the model: inputs, embedding, backbone, heads, training objective, evaluation
+- `examples/load_dummy.py` walkthrough script that loads the fixture and decodes a participant slice
+- `requirements.txt` minimal Python dependencies
+- `CITATION.bib` BibTeX entry for the paper
 - `LICENSE` Apache 2.0
 
 ## Quick start

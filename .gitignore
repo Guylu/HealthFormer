@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Model weights and large artifacts
+checkpoints/
+runs/
+logs/
+*.ckpt
+*.pth
+*.safetensors
+
+# Real (non-dummy) tokenized files. The committed dummy
+# `HPP_tokenized_dummy.pt` is force-included below.
+HPP_tokenized_*.pt
+!HPP_tokenized_dummy.pt

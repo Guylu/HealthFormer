@@ -19,8 +19,8 @@ It contains:
 
 ## Schema
 
-The file is a `dict` with 15 keys, matching the output of
-`hpptokenization.tokenization.output.save_output`:
+The file is a `dict` with 15 keys, matching the canonical 15-key output
+of the HPP tokenization pipeline:
 
 | Key | Type | Shape / Length | Notes |
 |---|---|---|---|
