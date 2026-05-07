@@ -65,21 +65,6 @@ Padding is zero-valued in `tokens` and `time_expanded`, and equal to
 `number_of_modalities` in `modalities`. Use `modalities != number_of_modalities`
 as the "real token" mask.
 
-## Regenerating
-
-The fixture is checked in directly. To rebuild or change its size, clone
-[HPPTokenization](https://github.com/Guylu/HPPTokenization) and run:
-
-```bash
-python3 scripts/make_dummy_data.py \
-    --out path/to/HealthFormer/HPP_tokenized_dummy.pt \
-    --seed 0 \
-    --n-participants 20 \
-    --max-len 2000
-```
-
-Different seeds produce different (still synthetic) fixtures with the
-same schema.
 
 ## Use it for what
 
