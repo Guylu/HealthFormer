@@ -35,6 +35,7 @@ any actual training work.
 - `HPP_tokenized_dummy.pt` a fully synthetic 700 KB fixture matching the real pipeline schema, for development without cohort access
 - `DUMMY_DATA.md` provenance and schema documentation for the fixture
 - `ARCHITECTURE.md` prose description of the model: inputs, embedding, backbone, heads, training objective, evaluation
+- `MODEL_CARD.md` Hugging Face style model card (intended uses, limitations, training data, evaluation, citation)
 - `examples/load_dummy.py` walkthrough script that loads the fixture and decodes a participant slice
 - `requirements.txt` minimal Python dependencies
 - `CITATION.bib` BibTeX entry for the paper
