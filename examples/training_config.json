@@ -1,0 +1,12 @@
+{
+  "data_path": "data/training.pt",
+  "checkpoint_dir": "checkpoints",
+  "split_policy": "modulo",
+  "percent_validation": 20,
+  "precision": "bf16-mixed",
+  "accelerator": "cuda",
+  "devices": 1,
+  "evaluate": true,
+  "save": true,
+  "allow_wandb": false
+}

@@ -48,7 +48,17 @@ logs/
 *.pth
 *.safetensors
 
-# Real (non-dummy) tokenized files. The committed dummy
-# `HPP_tokenized_dummy.pt` is force-included below.
-HPP_tokenized_*.pt
-!HPP_tokenized_dummy.pt
+# Training outputs and private inputs
+data/
+wandb/
+*.m
+*.pkl
+*.pt
+*.parquet
+*.npy
+*.npz
+*.log
+.env.*
+
+# Public synthetic schema example.
+!/HPP_tokenized_dummy.pt

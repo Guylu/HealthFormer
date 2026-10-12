@@ -121,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     print(f"Loading {args.path}\n")
-    blob = torch.load(args.path, map_location="cpu", weights_only=False)
+    blob = torch.load(args.path, map_location="cpu", weights_only=True)
 
     _print_top_level(blob)
     _print_global_metadata(blob)

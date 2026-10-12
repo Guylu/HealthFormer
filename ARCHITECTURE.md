@@ -1,100 +1,48 @@
 # Architecture
 
-A high-level prose description of HealthFormer. Exact hyperparameters,
-ablations, and quantitative results are reported in the paper
-(arXiv [2604.27899](https://arxiv.org/abs/2604.27899)); this document is
-the conceptual map.
+This overview describes the research implementation in this repository.
+The research code also includes experimental options explored during development;
+the [paper](https://arxiv.org/abs/2604.27899) specifies which components and settings
+were used for the reported results.
 
-## Inputs
+Each position contains a discrete value token, a continuous value, a modality ID,
+and seven time features. Padding is identified by modality ID: token ranges can
+share endpoints. The decoder combines learned token and modality embeddings,
+continuous-value encodings, temporal encodings, and optional age/gender features.
+Age/gender features become available only at or after their first recorded event,
+and must also be visible through the ELIS attention mask. Earlier queries cannot
+use demographic values recorded later. The target modality and time representations are supplied to the backbone, so
+predictions are conditional on the measurement being queried and its time.
 
-HealthFormer consumes the unified, padded token sequence produced by
-the HPP tokenization pipeline. Each position in the sequence carries
-three parallel channels:
+The decoder uses GELU, causal attention, and tanh logit soft-capping.
+Configurable options include embedding skip connections, value-related attention
+features, and attention-value gates. Defaults are in `healthformer/config.py`.
 
-| Channel | Tensor | Dtype | Semantics |
-|---|---|---|---|
-| Token id | `tokens` | `int16` | The discretized value within a modality's vocabulary slice |
-| Modality id | `modalities` | `int16` | Which signal this token came from (CGM, lab, diet log, ...) |
-| Temporal vector | `time_expanded` | `int16`, 7 dims | `day_of_week`, `hour`, `minute` (15-min buckets), `month`, `year`, `day_of_month`, `sleep` |
+Standard training predicts shifted tokens, with the existing soft-label objective
+and optional continuous MAE. ELIS adds its longitudinal loss with eligibility
+checks, query construction, and attention masks. Both branches accumulate gradients
+and use the same optimizer. Each completed optimizer update reports the mean weighted
+objective and its standard/ELIS contributions, learning rate, and gradient norm.
+Skipped ELIS branches contribute zero; rejected accumulation windows are discarded.
+Every selected training participant remains eligible for standard training.
 
-Padding uses `tokens == 0`, `modalities == number_of_modalities`, and an
-all-zero temporal vector. The modality channel is the canonical mask:
-`modalities != number_of_modalities` selects real positions.
+`model.py` defines representations and the decoder; `data.py` and `inputs.py`
+handle artifacts, augmentation, and loaders. `training.py` implements both loss
+branches; `prompts.py` shares ELIS sequence construction and batching with validation.
+`evaluation.py` monitors CE; `longitudinal.py` implements ELIS validation.
+`checkpointing.py` and `identity.py` manage continuation and experiment identity.
+ELIS training and validation use the same attention rule: first-visit rows are
+causal, queries see the first visit and themselves, and other future rows are
+self-only. Padding rows also have self-attention to avoid empty attention rows.
+Both branches remove the final target before padding inputs, use integer token
+and modality IDs, and preserve the artifact's continuous-value dtype. Visit eligibility
+and record lengths are computed once and reused by dataset views and the ELIS sampler.
 
-## Embedding
+The model returns logits. Training and validation share source tensors; training
+clones samples before augmentation. Runs with zero usable training batches or an
+epoch with no accepted optimizer updates fail explicitly. OOM and other unexpected
+runtime errors abort the run. Use a smaller context or batch size for a fresh run
+after an OOM.
 
-Each input position is embedded by summing four learned components:
-
-1. **Token id embedding.** A standard `nn.Embedding` over the unified
-   vocabulary. The token vocabulary is partitioned into per-modality
-   contiguous slices (so token id 273 always belongs to one specific
-   modality), letting the model exploit local structure inside a
-   slice without needing a separate per-modality vocab.
-2. **Modality id embedding.** A learned embedding over the
-   `number_of_modalities + 1` modalities (the `+1` is the padding
-   sentinel). This carries a strong prior about what the token
-   "means" in physical terms.
-3. **Temporal embeddings.** Seven independent embeddings, one per
-   temporal dimension, summed into a single temporal vector. Splitting
-   per-dim (rather than concatenating a learned position over a
-   product of dims) keeps the parameter count manageable and lets each
-   dim share statistics across all positions sharing that value.
-4. **Sequence position.** Either rotary position embeddings on the
-   attention or a small learned positional embedding added to the sum.
-
-All four are summed and passed through a final layer norm.
-
-## Backbone
-
-A decoder-only transformer with pre-norm self-attention. The exact
-depth, hidden dimension, and head count are tuned in the paper; the
-architecture is intentionally vanilla so contributions from the
-input representation and training objective remain isolated from
-backbone choices.
-
-
-## Output heads
-
-A head shares the backbone:
-
-**Per-modality next-token prediction.** A linear projection from
-   the backbone output to the unified vocabulary, trained with
-   cross-entropy. Because each modality occupies a contiguous slice
-   of the vocab, the model effectively learns per-modality
-   distributions while sharing the trunk.
-
-## Training objective
-
-The total loss is a weighted sum:
-
-- Next-token cross-entropy, masked over real (non-padding) positions
-
-Per-modality loss weighting balances the contribution of dense
-modalities (CGM, wearables) against sparse ones (annual labs).
-Without it, the model collapses toward the dense modalities and
-under-fits the rare-but-clinically-important sparse signals.
-
-## Generation and intervention-conditioned simulation
-
-At inference, given a prefix of a participant's tokenized trajectory,
-the decoder generates plausible continuations autoregressively. The
-"intervention" mechanism is implemented by injecting a typed
-intervention token (for example, a specific medication start) at a
-chosen position and conditioning the continuation on that injected
-prefix. Counterfactual trajectories are obtained by running the same
-prefix with and without the injected token and comparing the
-generated continuations.
-
-## Evaluation
-
-Three protocols, summarized here, detailed in the paper:
-
-1. **Held-out cohort split.** Standard log-likelihood and
-   per-modality next-token accuracy on a held-out portion of the
-   primary cohort.
-2. **External transfer.** Zero-shot evaluation on independent
-   external cohorts to measure out-of-distribution generalization.
-3. **Intervention experiments.** Quantitative comparison of model-
-   generated counterfactual trajectories against documented
-   intervention outcomes, where available.
-
+See the [training guide](TRAINING.md) for input fields, objective definitions,
+validation protocols, and checkpoint behavior.

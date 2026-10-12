@@ -1,9 +1,10 @@
 # Dummy data: `HPP_tokenized_dummy.pt`
 
 This repository ships with a small, fully synthetic fixture
-(`HPP_tokenized_dummy.pt`, about 700 KB) so contributors can run
-the modeling code, write loaders, and verify pipeline plumbing
-without access to any real cohort data.
+(`HPP_tokenized_dummy.pt`, about 700 KB) for exploring token, modality, and time tensors
+without access to any real cohort data. It is a schema example. For a runnable
+training example, use [`examples/make_training_fixture.py`](examples/make_training_fixture.py)
+as described in the [README](README.md#run-a-synthetic-training-example).
 
 ## Provenance
 
@@ -12,19 +13,20 @@ It contains:
 
 - **No real participant IDs.** `index` is `[10001, 10002, ..., 10020]`, fabricated by the script.
 - **No real token values.** All tokens come from the seeded RNG.
-- **No real bin edges.** Per-modality bin counts are random integers in `[5, 100]`.
+- **No real bin edges.** Per-modality token-range limits are synthetic.
 - **No real cohort distribution statistics.**
 - **No real modality names.** The 20 strings (`cgm`, `lab_hba1c`, `body_bmi`, ...) are generic medical-informatics concepts hand-written in the generator, not LabData loader names.
 - **No real column names.** `cat_cols` and `nutritional_cols` are short generic placeholders (`cat_col_0..4`, `nutr_col_0..4`).
 
 ## Schema
 
-The file is a `dict` with 15 keys, matching the canonical 15-key output
-of the HPP tokenization pipeline:
+The file is a `dict` with 15 keys. The training input contract additionally requires
+continuous values, bin edges, and compatible visit markers; see
+[Training inputs](TRAINING.md#inputs).
 
 | Key | Type | Shape / Length | Notes |
 |---|---|---|---|
-| `tokens` | `torch.int16` | `(20, 2000)` | pad value `0`, real values in `[1, vocab_size)` |
+| `tokens` | `torch.int16` | `(20, 2000)` | real values in `[0, vocab_size)`; padding also uses `0`, so mask by modality |
 | `modalities` | `torch.int16` | `(20, 2000)` | pad value = `number_of_modalities` |
 | `time_expanded` | `torch.int16` | `(20, 2000, 7)` | seven temporal dims |
 | `vocab_size` | `int` | scalar | 1123 in the default fixture |
@@ -33,8 +35,8 @@ of the HPP tokenization pipeline:
 | `number_of_modalities` | `int` | scalar | 20 |
 | `modality_name_to_number` | `dict[str, int]` | 20 entries | name to id |
 | `number_to_modality_name` | `dict[int, str]` | 20 entries | inverse |
-| `vals_per_modality` | `dict[str, set]` | 20 entries | observed token values per modality (keyed by name) |
-| `base_value_per_modality` | `dict[int, int]` | 20 entries | per-modality bin count (keyed by id) |
+| `vals_per_modality` | `dict[str, set]` | 20 entries | relative token IDs per modality (keyed by name); add its vocabulary offset for stored token IDs |
+| `base_value_per_modality` | `dict[int, int]` | 20 entries | largest relative token ID, inclusive (keyed by modality ID) |
 | `cum_base_value_per_modality` | `dict[int, int]` | 20 entries | cumulative offset (keyed by id) |
 | `cat_cols` | `list[str]` | length 5 | placeholder categorical column names |
 | `nutritional_cols` | `list[str]` | length 5 | placeholder nutritional column names |
@@ -45,7 +47,7 @@ of the HPP tokenization pipeline:
 ```python
 import torch
 
-blob = torch.load("HPP_tokenized_dummy.pt", map_location="cpu", weights_only=False)
+blob = torch.load("HPP_tokenized_dummy.pt", map_location="cpu", weights_only=True)
 tokens = blob["tokens"]            # (20, 2000) int16
 modalities = blob["modalities"]    # (20, 2000) int16
 time_expanded = blob["time_expanded"]  # (20, 2000, 7) int16
@@ -53,7 +55,8 @@ time_expanded = blob["time_expanded"]  # (20, 2000, 7) int16
 
 ## Token space
 
-Each modality occupies a contiguous slice of the unified vocabulary:
+Stored token IDs equal relative IDs plus the modality's vocabulary offset.
+In this fixture, adjacent modalities share the endpoint of their token ranges:
 
 ```
 modality 0 (cgm)        -> tokens in [0, base_0]
@@ -61,7 +64,8 @@ modality 1 (diet_log)   -> tokens in [cum_base_1, cum_base_1 + base_1]
 ...
 ```
 
-Padding is zero-valued in `tokens` and `time_expanded`, and equal to
+Token ID `0` is also a real value in modality `0`. Padding is zero-valued in
+`tokens` and `time_expanded`, and equal to
 `number_of_modalities` in `modalities`. Use `modalities != number_of_modalities`
 as the "real token" mask.
 
@@ -70,9 +74,9 @@ as the "real token" mask.
 
 This file is intended for:
 
-- Running `train.py` end-to-end on a laptop in seconds
-- Unit-testing data loaders against the real schema
-- Sketching model architectures that consume the unified token / modality / time tensors
+- Inspecting aligned token, modality, and time tensors
+- Exploring metadata and padding with `examples/load_dummy.py`
+- Sketching loaders for these fields
 
 It is not intended to be a meaningful training set. The vocabulary, the
 sequence lengths, and the cross-modality structure are all random.
