@@ -70,7 +70,7 @@ Token ID `0` is also a real value in modality `0`. Padding is zero-valued in
 as the "real token" mask.
 
 
-## Use it for what
+## Example uses
 
 This file is intended for:
 
@@ -78,6 +78,6 @@ This file is intended for:
 - Exploring metadata and padding with `examples/load_dummy.py`
 - Sketching loaders for these fields
 
-It is not intended to be a meaningful training set. The vocabulary, the
-sequence lengths, and the cross-modality structure are all random.
-Reported model results from this fixture are not informative.
+The vocabulary, sequence lengths, and cross-modality structure are randomly
+generated for schema exploration. Use the generated training fixture linked
+above to exercise the training pipeline.

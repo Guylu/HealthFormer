@@ -83,7 +83,7 @@ schema and can be inspected with `python examples/load_dummy.py`.
 
 Regression checks cover synthetic training, checkpoint continuation, ELIS, and
 local distributed CPU execution. CUDA numerical parity and multi-node execution
-remain unverified. Synthetic checks do not reproduce the paper's experiments.
+remain unverified.
 
 ## Citation
 

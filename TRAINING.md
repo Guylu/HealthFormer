@@ -128,8 +128,8 @@ overwrite `model_last.pt`; the final save follows the requested final validation
 Restart uses the last successfully saved checkpoint. Rank zero writes and closes
 a unique temporary file inside the checkpoint directory, then atomically replaces
 the rolling checkpoint. Write or replacement failures stop all workers without
-reporting success; an existing checkpoint survives those failures. This is not a
-power-loss durability guarantee. Intermediate checkpoints record training progress and are not a best-model selection.
+reporting success; an existing checkpoint survives those failures.
+Intermediate checkpoints record training progress rather than best-model selection.
 
 To continue, set `resume_from` to the checkpoint and keep the intended total
 `epochs` consistent with the original learning-rate schedule. Requested resume
@@ -151,19 +151,11 @@ the auxiliary objective despite identical loaded weights.
 Exact continuation requires checkpoint format 4, experiment-identity schema 9,
 complete cursor and accumulation metadata, and matching settings and artifacts.
 Format 4 stores only each worker's active CUDA device RNG state (null on CPU),
-so unused visible GPUs do not determine checkpoint compatibility. Earlier formats
-require weights-only initialization; all-device RNG lists are not reinterpreted.
+so unused visible GPUs do not determine checkpoint compatibility.
 Multi-worker runs with `train_sampler="distributed"` also require partitioning
-version 2. Earlier versions padded the sample order by repeating participants;
-the current version drops the remainder and can have fewer updates per epoch.
-Incompatible older checkpoints require weights-only initialization. Earlier
-previews used different augmentation, demographic visibility, visit sampling,
-context budgeting, and sampler seed/rank behavior; their training results and
-ELIS scores are not necessarily comparable. Schema 9 also changes BF16 continuous
-computation and samples removal blocks over real events rather than storage padding;
-zero requested blocks now leave the sample unchanged. These changes do not preserve
-exact continuation of older runs.
-Removed configuration keys are rejected.
+version 2, which drops the distributed remainder without repeating participants.
+Older checkpoints that fail these compatibility checks require weights-only
+initialization with `initialize_from` and a compatible model and vocabulary.
 
 Artifacts must use tensors and primitive containers supported by restricted loading.
 There is no unrestricted pickle-loading option. Convert incompatible legacy
@@ -298,17 +290,11 @@ and shared ELIS attention rules. Configuration defaults are in
 ## Research scope
 
 This release contains research code and a synthetic training example. Real HPP
-records, preprocessing, and trained weights are not distributed. The paper is the
-source for reported research results; the bundled checks do not reproduce them.
+records, preprocessing, and trained weights are not distributed. See the
+[paper](https://arxiv.org/abs/2604.27899) for the experimental settings and reported results.
 The synthetic CPU checks train the real model, save, resume, and compare final
 weights with uninterrupted training. Other checks exercise ELIS, longitudinal
 validation, losses, temporal handling, and distributed accumulation. CUDA numerical
 parity and multi-node execution remain unverified.
 
-Generalization to other populations or measurement practices requires independent evaluation;
-development validation is not a final untouched evaluation cohort.
-
-Longitudinal predictions depend on observed measurement types, times, and the
-year-group protocol described above. Intervention-conditioned generation alone
-does not identify causal treatment effects. This repository does not establish
-clinical or diagnostic validity or suitability for individual treatment decisions.
+See the [model card](MODEL_CARD.md#intended-use) for intended use and interpretation.

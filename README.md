@@ -39,7 +39,7 @@ python train.py --config data/synthetic/config.json --run
 
 This creates synthetic data and runs a small model on CPU, validates it, and
 saves a checkpoint. It exercises the standard training branch; ELIS has separate
-regression and distributed checks. It does not reproduce the paper's experiments.
+regression and distributed checks.
 
 For a walkthrough of the separate token/modality/time schema example, run
 `python examples/load_dummy.py`. That bundled fixture illustrates the schema;
@@ -56,6 +56,12 @@ python train.py --config examples/training_config.json --run
 
 The example enables standard validation and checkpoint saving. Longitudinal
 validation remains opt-in; see the [training guide](TRAINING.md#longitudinal-validation).
+
+The configurable model defaults in [`healthformer/config.py`](healthformer/config.py)
+are 320 embedding dimensions, 1 layer, 1 attention head, and zero dropout.
+`examples/training_config.json` inherits these settings unless overridden.
+See the Methods in the [paper](https://arxiv.org/abs/2604.27899) for the model
+settings used in the reported experiments.
 
 The original HPP data, preprocessing pipeline, and trained
 weights are not distributed. The [training guide](TRAINING.md) describes the
